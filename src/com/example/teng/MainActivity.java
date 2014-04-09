@@ -1,6 +1,7 @@
 package com.example.teng;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.R.color;
 import android.R.integer;
 import android.annotation.SuppressLint;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.HapticFeedbackConstants;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
@@ -21,10 +23,13 @@ import android.view.View.DragShadowBuilder;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup.LayoutParams;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +40,7 @@ public class MainActivity extends Activity {
 	int curid = 0;
 	int changeid = 0;
 	View curView;
+
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +65,11 @@ public class MainActivity extends Activity {
 		text = new View[24];
 
 		for (int i = 0; i < 24; i++) {
-			text[i] = new View(MainActivity.this);
+			LayoutInflater inflater = getLayoutInflater();
+			View view = inflater.inflate(R.layout.t, null);
+			TextView t = (TextView) view.findViewById(R.id.textView1);
+			t.setText("" + i);
+			text[i] = view;// new View(MainActivity.this);
 			text[i].setLayoutParams(new LayoutParams(metrics.widthPixels / 4,
 					metrics.heightPixels / 6));
 
@@ -111,10 +121,10 @@ public class MainActivity extends Activity {
 			else {
 				text[i].setOnTouchListener(new MyTouchListener());
 				text[i].setOnDragListener(new View.OnDragListener() {
-					
+
 					@Override
 					public boolean onDrag(View v, DragEvent event) {
-						Log.i("Drag", "DragEvent:"+event.getAction());
+						Log.i("Drag", "DragEvent:" + event.getAction());
 						switch (event.getAction()) {
 						case DragEvent.ACTION_DRAG_STARTED:
 							curView.setAlpha(0);
@@ -138,9 +148,13 @@ public class MainActivity extends Activity {
 								});
 							break;
 						case DragEvent.ACTION_DRAG_ENDED:
-							Log.i("Ten",""+v.getTag());
-							if(curView == v)
+							Log.i("Ten", "" + v.getTag());
+							if (curView == v)
 								curView.setAlpha(100);
+							curView.findViewById(R.id.button1).setVisibility(
+									View.GONE);
+							curView.findViewById(R.id.button2).setVisibility(
+									View.GONE);
 							break;
 						case DragEvent.ACTION_DRAG_ENTERED:
 							break;
@@ -164,7 +178,8 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 			DisplayMetrics metrics = new DisplayMetrics();
 			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			if (v.getHeight() == metrics.widthPixels / 2) {
+			if (v.getHeight() == metrics.heightPixels / 3
+					&& v.getWidth() == metrics.widthPixels / 2) {
 				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
 				params.width = metrics.widthPixels / 4;
 				params.height = metrics.heightPixels / 6;
@@ -172,18 +187,18 @@ public class MainActivity extends Activity {
 				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 1);
 				Integer a = (Integer) v.getTag();
 				gl.getChildAt(a).setLayoutParams(params);
-				gl.getChildAt(a).setOnClickListener(listener);
 			} else {
+				Log.i("Ten", "v.getHeight():" + v.getHeight()
+						+ "===metrics.widthPixels / 2:" + metrics.heightPixels
+						/ 2);
 				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
 
 				params.width = metrics.widthPixels / 2;
 				params.height = metrics.heightPixels / 3;
 				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
 				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-				v.setBackgroundColor(Color.YELLOW);
 				Integer a = (Integer) v.getTag();
 				gl.getChildAt(a).setLayoutParams(params);
-				gl.getChildAt(a).setOnClickListener(listener);
 			}
 
 		}
@@ -213,23 +228,87 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private final class MyTouchListener implements OnTouchListener {
-		public boolean onTouch(View view, MotionEvent motionEvent) {
+	Handler handler = new Handler();
+	Runnable mLongPressRunnable = new Runnable() {
+		@Override
+		public void run() {
+			if (!isMoved) {
+				Button b1 = (Button) curView.findViewById(R.id.button1);
+				Button b2 = (Button) curView.findViewById(R.id.button2);
+				b1.setVisibility(View.VISIBLE);
+				b1.setOnClickListener(new OnClickListener() {
 
-			Log.i("Touch","motionEvent.getAction()"+motionEvent.getAction());
-			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-				ClipData data = ClipData.newPlainText("", "");
-				DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
-						view);
-				curid = (Integer) view.getTag();
-				curView = view;
-				view.startDrag(data, shadowBuilder, null, 0);
+					@Override
+					public void onClick(View v) {
+						Toast.makeText(MainActivity.this, "Size",
+								Toast.LENGTH_SHORT).show();
+					}
+				});
+				b2.setVisibility(View.VISIBLE);
+				b2.setOnClickListener(new OnClickListener() {
 
-				return true;
-			} else {
-				return true;
+					@Override
+					public void onClick(View v) {
+						Toast.makeText(MainActivity.this, "Del",
+								Toast.LENGTH_SHORT).show();
+					}
+				});
+				isDraged = true;
 			}
 		}
+	};
+
+	// 移動的閾值
+	private static final int TOUCH_SLOP = 30;
+	private boolean isDraged = false;
+	private boolean isMoved;
+	private int mLastMotionX, mLastMotionY;
+
+	private final class MyTouchListener implements OnTouchListener {
+		public boolean onTouch(View view, MotionEvent motionEvent) {
+			int x = (int) motionEvent.getX();
+			int y = (int) motionEvent.getY();
+			Log.i("Touch", "motionEvent.getAction()" + motionEvent.getAction());
+			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+				if (isDraged && view == curView) {
+					Log.i("Ten", "觸發");
+					ClipData data = ClipData.newPlainText("", "");
+					DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
+							curView);
+					curView.startDrag(data, shadowBuilder, null, 0);
+				} else {
+					if (curView != null) {
+						curView.findViewById(R.id.button1).setVisibility(
+								View.GONE);
+						curView.findViewById(R.id.button2).setVisibility(
+								View.GONE);
+					}
+					mLastMotionX = x;
+					mLastMotionY = y;
+					isMoved = false;
+					curid = (Integer) view.getTag();
+					curView = view;
+					handler.postDelayed(mLongPressRunnable,
+							ViewConfiguration.getLongPressTimeout());
+				}
+				isDraged = false;
+				return true;
+			} else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+
+				if (isMoved)
+					return true;
+				if (Math.abs(mLastMotionX - x) > TOUCH_SLOP
+						|| Math.abs(mLastMotionY - y) > TOUCH_SLOP) {
+					// 移動超過閾值，則表示移動了
+					isMoved = true;
+				}
+				return true;
+			} else {
+				isMoved = true;
+			}
+			return true;
+		}
+
 	}
 
 	@Override
