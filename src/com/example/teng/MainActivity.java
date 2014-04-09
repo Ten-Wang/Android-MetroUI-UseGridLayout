@@ -34,7 +34,7 @@ public class MainActivity extends Activity {
 	int item;
 	int curid = 0;
 	int changeid = 0;
-
+	View curView;
 	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +43,7 @@ public class MainActivity extends Activity {
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 
-		Log.i("Ten", "此裝置銀幕大小為 " + metrics.widthPixels + " X "
+		Log.i("Ten", "This deview pixels X:" + metrics.widthPixels + " Y:"
 				+ metrics.heightPixels);
 		gl = new GridLayout(MainActivity.this);
 		gl.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
@@ -62,7 +62,6 @@ public class MainActivity extends Activity {
 			text[i] = new View(MainActivity.this);
 			text[i].setLayoutParams(new LayoutParams(metrics.widthPixels / 4,
 					metrics.heightPixels / 6));
-
 
 			if (i % 5 == 0)
 				text[i].setBackgroundColor(Color.BLUE);
@@ -84,83 +83,69 @@ public class MainActivity extends Activity {
 				"After=>Bottom:" + gl.getPaddingBottom() + " Left:"
 						+ gl.getPaddingLeft() + " Right:"
 						+ gl.getPaddingRight() + " Top:" + gl.getPaddingTop());
-//		View v = new View(this);
-//		GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-//		params.width = metrics.widthPixels / 2;
-//		params.height = metrics.heightPixels / 3;
-//		params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-//		params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-//		v.setLayoutParams(params);
-//		v.setBackgroundColor(Color.MAGENTA);
-//
-//		// //if number % 4 == 3 測試2X2
-//		text[11] = v;
-//		View temp = text[12];
-//		text[12] = text[11];
-//		text[11] = temp;
-//		gl.removeViewAt(12);
-//		gl.removeViewAt(11);
-//
-//		gl.addView(text[11], 11);
-//		gl.addView(text[12], 12);
+		// View v = new View(this);
+		// GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+		// params.width = metrics.widthPixels / 2;
+		// params.height = metrics.heightPixels / 3;
+		// params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
+		// params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
+		// v.setLayoutParams(params);
+		// v.setBackgroundColor(Color.MAGENTA);
+		//
+		// // //if number % 4 == 3 test 2X2
+		// text[11] = v;
+		// View temp = text[12];
+		// text[12] = text[11];
+		// text[11] = temp;
+		// gl.removeViewAt(12);
+		// gl.removeViewAt(11);
+		//
+		// gl.addView(text[11], 11);
+		// gl.addView(text[12], 12);
 
-		for (int i = 0; i < 24 ; i++){
-			Bundle tag =new Bundle();
-			tag.putInt("index", i);
-			text[i].setTag(tag);
-			if (i == 3) {
-				text[i].setOnLongClickListener(new OnLongClickListener() {
+		for (int i = 0; i < 24; i++) {
 
-					@Override
-					public boolean onLongClick(View v) {
-						ClipData data = ClipData.newPlainText("", "");
-						DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
-								v);
-						v.startDrag(data, shadowBuilder, v, 0);
-						v.setVisibility(View.INVISIBLE);
-						runOnUiThread(new Runnable() {
-							public void run() {
-								SwapView(1, 6);
-							}
-						});
-						return false;
-					}
-				});
-			} else {
+			text[i].setTag(i);
+			if (i < 6)
+				text[i].setOnClickListener(listener);
+			else {
 				text[i].setOnTouchListener(new MyTouchListener());
-				
 				text[i].setOnDragListener(new View.OnDragListener() {
-
+					
 					@Override
 					public boolean onDrag(View v, DragEvent event) {
-						// TODO Auto-generated method stub
+						Log.i("Drag", "DragEvent:"+event.getAction());
 						switch (event.getAction()) {
-						case DragEvent.ACTION_DRAG_ENDED:
-//							changeid = ((Bundle)v.getTag()).getInt("index");
-//							if(changeid != curid )
-//								runOnUiThread(new Runnable() {
-//									public void run() {
-//										Log.i("Ten","change a:"+changeid+" change d:"+curid);
-//										SwapView(changeid, curid);
-//									}
-//								});
-							Log.i("chauster", "ACTION_DRAG_ENDED");
+						case DragEvent.ACTION_DRAG_STARTED:
+							curView.setAlpha(0);
 							break;
 						case DragEvent.ACTION_DRAG_LOCATION:
-							
-							Log.i("chauster","tag:"+((Bundle)v.getTag()).getInt("index"));
-							//Log.i("chauster", "eventX = " + event.getX());
-							//Log.i("chauster", "eventY = " + event.getY());
+
+							// Log.i("Ten", "eventX = " + event.getX());
+							// Log.i("Ten", "eventY = " + event.getY());
 							break;
 						case DragEvent.ACTION_DROP:
-							changeid = ((Bundle)v.getTag()).getInt("index");
-							if(changeid != curid )
+							Log.i("Ten", "ACTION_DROP:");
+							changeid = (Integer) v.getTag();
+							if (changeid != curid)
 								runOnUiThread(new Runnable() {
 									public void run() {
-										Log.i("Ten","change a:"+changeid+" change d:"+curid);
+										Log.i("Ten", "change a:" + changeid
+												+ " change d:" + curid);
 										SwapView(changeid, curid);
+										curView.setVisibility(View.VISIBLE);
 									}
 								});
+							break;
+						case DragEvent.ACTION_DRAG_ENDED:
+							Log.i("Ten",""+v.getTag());
+							if(curView == v)
+								curView.setAlpha(100);
+							break;
+						case DragEvent.ACTION_DRAG_ENTERED:
+							break;
+						case DragEvent.ACTION_DRAG_EXITED:
+							Log.i("Ten", "ACTION_DRAG_EXITED:");
 							break;
 						default:
 							break;
@@ -170,36 +155,80 @@ public class MainActivity extends Activity {
 				});
 			}
 		}
+
 	}
 
+	OnClickListener listener = new OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			DisplayMetrics metrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(metrics);
+			if (v.getHeight() == metrics.widthPixels / 2) {
+				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+				params.width = metrics.widthPixels / 4;
+				params.height = metrics.heightPixels / 6;
+				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 1);
+				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 1);
+				Integer a = (Integer) v.getTag();
+				gl.getChildAt(a).setLayoutParams(params);
+				gl.getChildAt(a).setOnClickListener(listener);
+			} else {
+				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+
+				params.width = metrics.widthPixels / 2;
+				params.height = metrics.heightPixels / 3;
+				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
+				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
+				v.setBackgroundColor(Color.YELLOW);
+				Integer a = (Integer) v.getTag();
+				gl.getChildAt(a).setLayoutParams(params);
+				gl.getChildAt(a).setOnClickListener(listener);
+			}
+
+		}
+	};
+
 	public void SwapView(int a, int b) {
-		gl.removeView(text[b]);
-		gl.removeView(text[a]);
-		View temp = text[b];
-		text[b] = text[a];
-		text[a] = temp;
-		gl.addView(text[a], a);
-		gl.addView(text[b], b);
-//		curid = changeid;
-		
+		Integer tInteger = (Integer) text[b].getTag();
+		text[b].setTag(text[a].getTag());
+		text[a].setTag(tInteger);
+		if (a < b) {
+			gl.removeView(text[b]);
+			gl.removeView(text[a]);
+			View temp = text[b];
+			text[b] = text[a];
+			text[a] = temp;
+			gl.addView(text[a], a);
+			gl.addView(text[b], b);
+		} else {
+			gl.removeView(text[a]);
+			gl.removeView(text[b]);
+
+			View temp = text[b];
+			text[b] = text[a];
+			text[a] = temp;
+			gl.addView(text[b], b);
+			gl.addView(text[a], a);
+		}
 	}
 
 	private final class MyTouchListener implements OnTouchListener {
 		public boolean onTouch(View view, MotionEvent motionEvent) {
 
+			Log.i("Touch","motionEvent.getAction()"+motionEvent.getAction());
 			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
 				ClipData data = ClipData.newPlainText("", "");
 				DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
 						view);
-				view.startDrag(data, shadowBuilder, view, 0);
-				curid = ((Bundle)view.getTag()).getInt("index");
-				//view.setVisibility(View.INVISIBLE);
+				curid = (Integer) view.getTag();
+				curView = view;
+				view.startDrag(data, shadowBuilder, null, 0);
+
+				return true;
+			} else {
 				return true;
 			}
-			else {
-				//view.setVisibility(View.VISIBLE);
-			}
-			return true;
 		}
 	}
 
@@ -209,49 +238,4 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.main, menu);
 		return true;
 	}
-	// gl.setOnTouchListener(new OnTouchListener() {
-	//
-	// @Override
-	// public boolean onTouch(View v, MotionEvent ev) {
-	// if (mVelocityTracker == null) {
-	// mVelocityTracker = VelocityTracker.obtain();
-	// }
-	// mVelocityTracker.addMovement(ev);
-	//
-	// final int action = ev.getAction();
-	//
-	// switch (action & MotionEvent.ACTION_MASK) {
-	// case MotionEvent.ACTION_DOWN: {
-	//
-	// break;
-	// }
-	// case MotionEvent.ACTION_MOVE: {
-	// int x = (int)ev.getX();
-	// int y = (int)ev.getY();
-	// Log.i("Ten","x:"+x+" y:"+y);
-	// int l = x - v.getWidth()/2;
-	// int t = y - v.getHeight()/2;
-	// int r = x + v.getWidth()/2;
-	// int b = y + v.getHeight()/2;
-	// Log.i("Ten","l:"+l+" t:"+t+" r:"+r+" b:"+b);
-	// v.layout(l,t,r,b);
-	// break;
-	// }
-	// case MotionEvent.ACTION_UP: {
-	// int x = (int)ev.getX();
-	// int y = (int)ev.getY();
-	// int l = x - v.getWidth()/2;
-	// int t = y - v.getHeight()/2;
-	// final int r = x + v.getWidth()/2;
-	// final int b = y + v.getHeight()/2;
-	// Log.i("Ten","l:"+l+" t:"+t+" r:"+r+" b:"+b);
-	// v.layout(l,t,r,b);
-	// break;
-	// }
-	// case MotionEvent.ACTION_CANCEL:
-	// break;
-	// }
-	// return false;
-	// }
-	// });
 }
