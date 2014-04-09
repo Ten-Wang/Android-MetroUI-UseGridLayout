@@ -2,44 +2,39 @@ package com.example.teng;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.R.color;
-import android.R.integer;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ClipData;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.DragEvent;
-import android.view.Gravity;
-import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.view.View;
 import android.view.View.DragShadowBuilder;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.GridLayout;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
+
 	GridLayout gl;
-	View[] text;
-	int item;
+	View[] mViews;
 	int curid = 0;
 	int changeid = 0;
 	View curView;
+	private int smallSize = 1;
+	private int bigSize = 2;
+	private int viewMax = 24;
+	private int columnCount = 4;
+	private int rowCount = 6;
 
 	@SuppressLint("NewApi")
 	@Override
@@ -55,36 +50,36 @@ public class MainActivity extends Activity {
 		gl.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT));
 		gl.setOrientation(0);
-		gl.setColumnCount(4);
-		gl.setRowCount(6);
+		gl.setColumnCount(columnCount);
+		gl.setRowCount(rowCount);
 		Log.i("Ten",
 				"Bottom:" + gl.getPaddingBottom() + " Left:"
 						+ gl.getPaddingLeft() + " Right:"
 						+ gl.getPaddingRight() + " Top:" + gl.getPaddingTop());
 
-		text = new View[24];
+		mViews = new View[viewMax];
 
-		for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < viewMax; i++) {
 			LayoutInflater inflater = getLayoutInflater();
 			View view = inflater.inflate(R.layout.t, null);
 			TextView t = (TextView) view.findViewById(R.id.textView1);
 			t.setText("" + i);
-			text[i] = view;// new View(MainActivity.this);
-			text[i].setLayoutParams(new LayoutParams(metrics.widthPixels / 4,
-					metrics.heightPixels / 6));
+			mViews[i] = view;// new View(MainActivity.this);
+			mViews[i].setLayoutParams(new LayoutParams(metrics.widthPixels
+					/ columnCount, metrics.heightPixels / rowCount));
 
 			if (i % 5 == 0)
-				text[i].setBackgroundColor(Color.BLUE);
+				mViews[i].setBackgroundColor(Color.BLUE);
 			else if (i % 7 == 0)
-				text[i].setBackgroundColor(Color.RED);
+				mViews[i].setBackgroundColor(Color.RED);
 			else if (i % 3 == 0)
-				text[i].setBackgroundColor(Color.GRAY);
+				mViews[i].setBackgroundColor(Color.GRAY);
 			else if (i % 11 == 0)
-				text[i].setBackgroundColor(Color.CYAN);
+				mViews[i].setBackgroundColor(Color.CYAN);
 			else
-				text[i].setBackgroundColor(Color.GREEN);
+				mViews[i].setBackgroundColor(Color.GREEN);
 
-			gl.addView(text[i]);
+			gl.addView(mViews[i]);
 		}
 
 		setContentView(gl);
@@ -93,81 +88,59 @@ public class MainActivity extends Activity {
 				"After=>Bottom:" + gl.getPaddingBottom() + " Left:"
 						+ gl.getPaddingLeft() + " Right:"
 						+ gl.getPaddingRight() + " Top:" + gl.getPaddingTop());
-		// View v = new View(this);
-		// GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-		// params.width = metrics.widthPixels / 2;
-		// params.height = metrics.heightPixels / 3;
-		// params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-		// params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-		// v.setLayoutParams(params);
-		// v.setBackgroundColor(Color.MAGENTA);
-		//
-		// // //if number % 4 == 3 test 2X2
-		// text[11] = v;
-		// View temp = text[12];
-		// text[12] = text[11];
-		// text[11] = temp;
-		// gl.removeViewAt(12);
-		// gl.removeViewAt(11);
-		//
-		// gl.addView(text[11], 11);
-		// gl.addView(text[12], 12);
 
-		for (int i = 0; i < 24; i++) {
+		for (int i = 0; i < viewMax; i++) {
 
-			text[i].setTag(i);
-			if (i < 6)
-				text[i].setOnClickListener(listener);
-			else {
-				text[i].setOnTouchListener(new MyTouchListener());
-				text[i].setOnDragListener(new View.OnDragListener() {
+			mViews[i].setTag(i);
 
-					@Override
-					public boolean onDrag(View v, DragEvent event) {
-						Log.i("Drag", "DragEvent:" + event.getAction());
-						switch (event.getAction()) {
-						case DragEvent.ACTION_DRAG_STARTED:
-							curView.setAlpha(0);
-							break;
-						case DragEvent.ACTION_DRAG_LOCATION:
+			mViews[i].setOnTouchListener(new MyTouchListener());
+			mViews[i].setOnDragListener(new View.OnDragListener() {
 
-							// Log.i("Ten", "eventX = " + event.getX());
-							// Log.i("Ten", "eventY = " + event.getY());
-							break;
-						case DragEvent.ACTION_DROP:
-							Log.i("Ten", "ACTION_DROP:");
-							changeid = (Integer) v.getTag();
-							if (changeid != curid)
-								runOnUiThread(new Runnable() {
-									public void run() {
-										Log.i("Ten", "change a:" + changeid
-												+ " change d:" + curid);
-										SwapView(changeid, curid);
-										curView.setVisibility(View.VISIBLE);
-									}
-								});
-							break;
-						case DragEvent.ACTION_DRAG_ENDED:
-							Log.i("Ten", "" + v.getTag());
-							if (curView == v)
-								curView.setAlpha(100);
-							curView.findViewById(R.id.button1).setVisibility(
-									View.GONE);
-							curView.findViewById(R.id.button2).setVisibility(
-									View.GONE);
-							break;
-						case DragEvent.ACTION_DRAG_ENTERED:
-							break;
-						case DragEvent.ACTION_DRAG_EXITED:
-							Log.i("Ten", "ACTION_DRAG_EXITED:");
-							break;
-						default:
-							break;
-						}
-						return true;
+				@Override
+				public boolean onDrag(View v, DragEvent event) {
+					Log.i("Drag", "DragEvent:" + event.getAction());
+					switch (event.getAction()) {
+					case DragEvent.ACTION_DRAG_STARTED:
+						curView.setAlpha(0);
+						break;
+					case DragEvent.ACTION_DRAG_LOCATION:
+						// Log.i("Ten", "eventX = " + event.getX());
+						// Log.i("Ten", "eventY = " + event.getY());
+						break;
+					case DragEvent.ACTION_DROP:
+						Log.i("Ten", "ACTION_DROP:");
+						changeid = (Integer) v.getTag();
+						if (changeid != curid)
+							runOnUiThread(new Runnable() {
+								public void run() {
+									Log.i("Ten", "change a:" + changeid
+											+ " change d:" + curid);
+									SwapView(changeid, curid);
+									curView.setVisibility(View.VISIBLE);
+								}
+							});
+						break;
+					case DragEvent.ACTION_DRAG_ENDED:
+						Log.i("Ten", "" + v.getTag());
+						if (curView == v)
+							curView.setAlpha(100);
+						curView.findViewById(R.id.button1).setVisibility(
+								View.GONE);
+						curView.findViewById(R.id.button2).setVisibility(
+								View.GONE);
+						break;
+					case DragEvent.ACTION_DRAG_ENTERED:
+						break;
+					case DragEvent.ACTION_DRAG_EXITED:
+						Log.i("Ten", "ACTION_DRAG_EXITED:");
+						break;
+					default:
+						break;
 					}
-				});
-			}
+					return true;
+				}
+			});
+
 		}
 
 	}
@@ -178,14 +151,15 @@ public class MainActivity extends Activity {
 		public void onClick(View v) {
 			DisplayMetrics metrics = new DisplayMetrics();
 			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			if (v.getHeight() == metrics.heightPixels / 3
-					&& v.getWidth() == metrics.widthPixels / 2) {
+			if (curView.getHeight() == metrics.heightPixels / 3
+					&& curView.getWidth() == metrics.widthPixels / 2) {
 				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-				params.width = metrics.widthPixels / 4;
-				params.height = metrics.heightPixels / 6;
-				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 1);
-				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 1);
-				Integer a = (Integer) v.getTag();
+				params.width = metrics.widthPixels / columnCount;
+				params.height = metrics.heightPixels / rowCount;
+				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
+				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE,
+						smallSize);
+				Integer a = (Integer) curView.getTag();
 				gl.getChildAt(a).setLayoutParams(params);
 			} else {
 				Log.i("Ten", "v.getHeight():" + v.getHeight()
@@ -193,11 +167,11 @@ public class MainActivity extends Activity {
 						/ 2);
 				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
 
-				params.width = metrics.widthPixels / 2;
-				params.height = metrics.heightPixels / 3;
-				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, 2);
-				Integer a = (Integer) v.getTag();
+				params.width = metrics.widthPixels / (columnCount / 2);
+				params.height = metrics.heightPixels / (rowCount / 2);
+				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
+				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
+				Integer a = (Integer) curView.getTag();
 				gl.getChildAt(a).setLayoutParams(params);
 			}
 
@@ -205,26 +179,26 @@ public class MainActivity extends Activity {
 	};
 
 	public void SwapView(int a, int b) {
-		Integer tInteger = (Integer) text[b].getTag();
-		text[b].setTag(text[a].getTag());
-		text[a].setTag(tInteger);
+		Integer tInteger = (Integer) mViews[b].getTag();
+		mViews[b].setTag(mViews[a].getTag());
+		mViews[a].setTag(tInteger);
 		if (a < b) {
-			gl.removeView(text[b]);
-			gl.removeView(text[a]);
-			View temp = text[b];
-			text[b] = text[a];
-			text[a] = temp;
-			gl.addView(text[a], a);
-			gl.addView(text[b], b);
+			gl.removeView(mViews[b]);
+			gl.removeView(mViews[a]);
+			View temp = mViews[b];
+			mViews[b] = mViews[a];
+			mViews[a] = temp;
+			gl.addView(mViews[a], a);
+			gl.addView(mViews[b], b);
 		} else {
-			gl.removeView(text[a]);
-			gl.removeView(text[b]);
+			gl.removeView(mViews[a]);
+			gl.removeView(mViews[b]);
 
-			View temp = text[b];
-			text[b] = text[a];
-			text[a] = temp;
-			gl.addView(text[b], b);
-			gl.addView(text[a], a);
+			View temp = mViews[b];
+			mViews[b] = mViews[a];
+			mViews[a] = temp;
+			gl.addView(mViews[b], b);
+			gl.addView(mViews[a], a);
 		}
 	}
 
@@ -236,14 +210,7 @@ public class MainActivity extends Activity {
 				Button b1 = (Button) curView.findViewById(R.id.button1);
 				Button b2 = (Button) curView.findViewById(R.id.button2);
 				b1.setVisibility(View.VISIBLE);
-				b1.setOnClickListener(new OnClickListener() {
-
-					@Override
-					public void onClick(View v) {
-						Toast.makeText(MainActivity.this, "Size",
-								Toast.LENGTH_SHORT).show();
-					}
-				});
+				b1.setOnClickListener(listener);
 				b2.setVisibility(View.VISIBLE);
 				b2.setOnClickListener(new OnClickListener() {
 
@@ -271,7 +238,6 @@ public class MainActivity extends Activity {
 			Log.i("Touch", "motionEvent.getAction()" + motionEvent.getAction());
 			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
 				if (isDraged && view == curView) {
-					Log.i("Ten", "觸發");
 					ClipData data = ClipData.newPlainText("", "");
 					DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
 							curView);
@@ -282,6 +248,7 @@ public class MainActivity extends Activity {
 								View.GONE);
 						curView.findViewById(R.id.button2).setVisibility(
 								View.GONE);
+
 					}
 					mLastMotionX = x;
 					mLastMotionY = y;
@@ -299,7 +266,7 @@ public class MainActivity extends Activity {
 					return true;
 				if (Math.abs(mLastMotionX - x) > TOUCH_SLOP
 						|| Math.abs(mLastMotionY - y) > TOUCH_SLOP) {
-					// 移動超過閾值，則表示移動了
+					// if touch move over slop threshold ,isMoved mark true;
 					isMoved = true;
 				}
 				return true;
