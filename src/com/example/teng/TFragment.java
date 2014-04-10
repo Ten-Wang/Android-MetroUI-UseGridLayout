@@ -15,6 +15,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.View.DragShadowBuilder;
 import android.view.View.OnClickListener;
+import android.view.View.OnDragListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
@@ -25,40 +26,49 @@ import android.widget.Toast;
 
 public class TFragment extends Fragment {
 
-	int curid = 0;
-	int changeid = 0;
-	View curView;
+	int currentId = 0;
+	int changeId = 0;
+	View currentView;
+	
 	private int smallSize = 1;
 	private int bigSize = 2;
 	private int columnCount = 4;
 	private int rowCount = 6;
+	
 	int viewMax = ShareData.data().viewMax = 24;
-	GridLayout gl;
+	
+	GridLayout mGridLayout;
 	View[] mViews;
-
+	DisplayMetrics metrics;
+	
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
 		super.onCreateView(inflater, container, savedInstanceState);
 
-		DisplayMetrics metrics = new DisplayMetrics();
+		metrics = new DisplayMetrics();
 		getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		
-		gl = ShareData.data().gl= new GridLayout(getActivity());
-		mViews = ShareData.data().mViews = new View[viewMax];
-		
 		Log.i("Ten", "This deview pixels X:" + metrics.widthPixels + " Y:"
 				+ metrics.heightPixels);
-		gl.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
+		mGridLayout = ShareData.data().mGridLayout= new GridLayout(getActivity());
+		mViews = ShareData.data().mViews = new View[viewMax];
+		GridLayoutInit(inflater);
+		ScrollView scrollView = new ScrollView(getActivity());
+		scrollView.addView(mGridLayout);
+		return scrollView;
+	}
+	
+	
+	
+	private void GridLayoutInit(LayoutInflater inflater) {
+		mGridLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
 				LayoutParams.MATCH_PARENT));
-		gl.setOrientation(0);
-		gl.setColumnCount(columnCount);
-		gl.setRowCount(rowCount);
+		mGridLayout.setOrientation(0);
+		mGridLayout.setColumnCount(columnCount);
+		mGridLayout.setRowCount(rowCount);
 
 		for (int i = 0; i < viewMax; i++) {
-			View view = inflater.inflate(R.layout.tview, null);
-			TextView t = (TextView) view.findViewById(R.id.textView1);
-			t.setText("" + i);
+			View view = inflater.inflate(R.layout.metro_view, null);
 			mViews[i] = view;// new View(MainActivity.this);
 			mViews[i].setLayoutParams(new LayoutParams(metrics.widthPixels
 					/ columnCount, metrics.heightPixels / rowCount));
@@ -74,90 +84,82 @@ public class TFragment extends Fragment {
 				mViews[i].setBackgroundColor(Color.CYAN);	
 			else
 				mViews[i].setBackgroundColor(Color.GREEN);		
-			
 			mViews[i].setAlpha(0);
-			gl.addView(mViews[i]);
-		}
-		ScrollView scrollView = new ScrollView(getActivity());
-		scrollView.addView(gl);
-		Log.i("Ten",
-				"scrollView: scrollView.getHeight():" + scrollView.getHeight()
-						+ "scrollView.getWidth():" + scrollView.getWidth());
-
-		for (int i = 0; i < viewMax; i++) {
-
+			
+			mGridLayout.addView(mViews[i]);
+						
+			TextView tv = (TextView) view.findViewById(R.id.textView1);
+			tv.setText("" + i);
 			mViews[i].setTag(i);
-
 			mViews[i].setOnTouchListener(new MyTouchListener());
-			mViews[i].setOnDragListener(new View.OnDragListener() {
-
-				@Override
-				public boolean onDrag(View v, DragEvent event) {
-					Log.i("Drag", "DragEvent:" + event.getAction());
-					switch (event.getAction()) {
-					case DragEvent.ACTION_DRAG_STARTED:
-						curView.setAlpha(0);
-						break;
-					case DragEvent.ACTION_DRAG_LOCATION:
-						// Log.i("Ten", "eventX = " + event.getX());
-						// Log.i("Ten", "eventY = " + event.getY());
-						break;
-					case DragEvent.ACTION_DROP:
-						Log.i("Ten", "ACTION_DROP:");
-						if (v.getAlpha() == 0)
-							break;
-						changeid = (Integer) v.getTag();
-						if (changeid != curid)
-							getActivity().runOnUiThread(new Runnable() {
-								public void run() {
-									Log.i("Ten", "change a:" + changeid
-											+ " change d:" + curid);
-									SwapView(changeid, curid);
-
-								}
-							});
-						break;
-					case DragEvent.ACTION_DRAG_ENDED:
-						Log.i("Ten", "" + v.getTag());
-						if (curView == v)
-							curView.setAlpha(100);
-						curView.findViewById(R.id.button1).setVisibility(
-								View.GONE);
-						curView.findViewById(R.id.button2).setVisibility(
-								View.GONE);
-						break;
-					case DragEvent.ACTION_DRAG_ENTERED:
-						break;
-					case DragEvent.ACTION_DRAG_EXITED:
-						Log.i("Ten", "ACTION_DRAG_EXITED:");
-						break;
-					default:
-						break;
-					}
-					return true;
-				}
-			});
-
+			mViews[i].setOnDragListener(new MyDramGridLayoutistener());
 		}
-		return scrollView;
 	}
 
+	private final class MyDramGridLayoutistener implements OnDragListener {
+
+		@Override
+		public boolean onDrag(View v, DragEvent event) {
+			Log.i("Drag", "DragEvent:" + event.getAction());
+			switch (event.getAction()) {
+			case DragEvent.ACTION_DRAG_STARTED:
+				currentView.setAlpha(0);
+				break;
+			case DragEvent.ACTION_DRAG_LOCATION:
+				// Log.i("Ten", "eventX = " + event.getX());
+				// Log.i("Ten", "eventY = " + event.getY());
+				break;
+			case DragEvent.ACTION_DROP:
+				Log.i("Ten", "ACTION_DROP:");
+				if (v.getAlpha() == 0)
+					break;
+				changeId = (Integer) v.getTag();
+				if (changeId != currentId)
+					getActivity().runOnUiThread(new Runnable() {
+						public void run() {
+							Log.i("Ten", "change a:" + changeId
+									+ " change d:" + currentId);
+							SwapView(changeId, currentId);
+
+						}
+					});
+				break;
+			case DragEvent.ACTION_DRAG_ENDED:
+				Log.i("Ten", "" + v.getTag());
+				if (currentView == v)
+					currentView.setAlpha(100);
+				currentView.findViewById(R.id.LeftTopbtn).setVisibility(
+						View.GONE);
+				currentView.findViewById(R.id.RightBottombtn).setVisibility(
+						View.GONE);
+				break;
+			case DragEvent.ACTION_DRAG_ENTERED:
+				break;
+			case DragEvent.ACTION_DRAG_EXITED:
+				Log.i("Ten", "ACTION_DRAG_EXITED:");
+				break;
+			default:
+				break;
+			}
+			return true;
+		
+		}
+	}
+	/////////////////////////////////Click Touch Event Control////////////////////////////
 	OnClickListener listener = new OnClickListener() {
 
 		@Override
 		public void onClick(View v) {
-			DisplayMetrics metrics = new DisplayMetrics();
-			getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			if (curView.getHeight() == metrics.heightPixels / 3
-					&& curView.getWidth() == metrics.widthPixels / 2) {
+			if (currentView.getHeight() == metrics.heightPixels / 3
+					&& currentView.getWidth() == metrics.widthPixels / 2) {
 				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
 				params.width = metrics.widthPixels / columnCount;
 				params.height = metrics.heightPixels / rowCount;
 				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
 				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE,
 						smallSize);
-				Integer a = (Integer) curView.getTag();
-				gl.getChildAt(a).setLayoutParams(params);
+				Integer a = (Integer) currentView.getTag();
+				mGridLayout.getChildAt(a).setLayoutParams(params);
 			} else {
 				Log.i("Ten", "v.getHeight():" + v.getHeight()
 						+ "===metrics.widthPixels / 2:" + metrics.heightPixels
@@ -168,8 +170,8 @@ public class TFragment extends Fragment {
 				params.height = metrics.heightPixels / (rowCount / 2);
 				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
 				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
-				Integer a = (Integer) curView.getTag();
-				gl.getChildAt(a).setLayoutParams(params);
+				Integer a = (Integer) currentView.getTag();
+				mGridLayout.getChildAt(a).setLayoutParams(params);
 			}
 
 		}
@@ -180,41 +182,42 @@ public class TFragment extends Fragment {
 		mViews[b].setTag(mViews[a].getTag());
 		mViews[a].setTag(tInteger);
 		if (a < b) {
-			gl.removeView(mViews[b]);
-			gl.removeView(mViews[a]);
+			mGridLayout.removeView(mViews[b]);
+			mGridLayout.removeView(mViews[a]);
 			View temp = mViews[b];
 			mViews[b] = mViews[a];
 			mViews[a] = temp;
-			gl.addView(mViews[a], a);
-			gl.addView(mViews[b], b);
+			mGridLayout.addView(mViews[a], a);
+			mGridLayout.addView(mViews[b], b);
 		} else {
-			gl.removeView(mViews[a]);
-			gl.removeView(mViews[b]);
+			mGridLayout.removeView(mViews[a]);
+			mGridLayout.removeView(mViews[b]);
 
 			View temp = mViews[b];
 			mViews[b] = mViews[a];
 			mViews[a] = temp;
-			gl.addView(mViews[b], b);
-			gl.addView(mViews[a], a);
+			mGridLayout.addView(mViews[b], b);
+			mGridLayout.addView(mViews[a], a);
 		}
 	}
+
 
 	Handler handler = new Handler();
 	Runnable mLongPressRunnable = new Runnable() {
 		@Override
 		public void run() {
 			if (!isMoved) {
-				Button b1 = (Button) curView.findViewById(R.id.button1);
-				Button b2 = (Button) curView.findViewById(R.id.button2);
-				b1.setVisibility(View.VISIBLE);
-				b1.setOnClickListener(listener);
-				b2.setVisibility(View.VISIBLE);
-				b2.setOnClickListener(new OnClickListener() {
+				Button btn1 = (Button) currentView.findViewById(R.id.LeftTopbtn);
+				Button btn2 = (Button) currentView.findViewById(R.id.RightBottombtn);
+				btn1.setVisibility(View.VISIBLE);
+				btn1.setOnClickListener(listener);
+				btn2.setVisibility(View.VISIBLE);
+				btn2.setOnClickListener(new OnClickListener() {
 
 					@Override
 					public void onClick(View v) {
-						curView.setAlpha(0);
-						Toast.makeText(getActivity(), "Del",
+						currentView.setAlpha(0);
+						Toast.makeText(getActivity(), ((TextView)v.findViewById(R.id.textView1)).getText(),
 								Toast.LENGTH_SHORT).show();
 					}
 				});
@@ -222,7 +225,7 @@ public class TFragment extends Fragment {
 			}
 		}
 	};
-
+	
 	// move threshold
 	private static final int TOUCH_SLOP = 30;
 	private boolean isDraged = false;
@@ -231,35 +234,36 @@ public class TFragment extends Fragment {
 
 	private final class MyTouchListener implements OnTouchListener {
 		public boolean onTouch(View view, MotionEvent motionEvent) {
+			if(view.getAlpha() == 0)
+				return false;
 			int x = (int) motionEvent.getX();
 			int y = (int) motionEvent.getY();
 			Log.i("Touch", "motionEvent.getAction()" + motionEvent.getAction());
 			if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-				if (isDraged && view == curView) {
+				if (isDraged && view == currentView) {
 					ClipData data = ClipData.newPlainText("", "");
 					DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(
-							curView);
-					curView.startDrag(data, shadowBuilder, null, 0);
+							currentView);
+					currentView.startDrag(data, shadowBuilder, null, 0);
 				} else {
-					if (curView != null) {
-						curView.findViewById(R.id.button1).setVisibility(
+					if (currentView != null) {
+						currentView.findViewById(R.id.LeftTopbtn).setVisibility(
 								View.GONE);
-						curView.findViewById(R.id.button2).setVisibility(
+						currentView.findViewById(R.id.RightBottombtn).setVisibility(
 								View.GONE);
 
 					}
 					mLastMotionX = x;
 					mLastMotionY = y;
 					isMoved = false;
-					curid = (Integer) view.getTag();
-					curView = view;
+					currentId = (Integer) view.getTag();
+					currentView = view;
 					handler.postDelayed(mLongPressRunnable,
 							ViewConfiguration.getLongPressTimeout());
 				}
 				isDraged = false;
 				return true;
 			} else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
-
 				if (isMoved)
 					return true;
 				if (Math.abs(mLastMotionX - x) > TOUCH_SLOP

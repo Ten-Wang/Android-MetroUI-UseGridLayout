@@ -7,8 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends Activity {
-	private int cur_count =0;
-
+	private int currentCount =0;
 
 	@SuppressLint("NewApi")
 	@Override
@@ -29,10 +28,10 @@ public class MainActivity extends Activity {
 		if (item.getItemId() == R.id.action_setting) {
 			for (int i = 0; i < ShareData.data().viewMax; i++) {
 				// Log.i("Ten","((String)gl.getChildAt(i).getTag()"+((String)gl.getChildAt(i).getTag()));
-				if (((Integer) ShareData.data().gl.getChildAt(i).getTag()) == cur_count)
-					ShareData.data().gl.getChildAt(i).setAlpha(100);
+				if (((Integer) ShareData.data().mGridLayout.getChildAt(i).getTag()) == currentCount)
+					ShareData.data().mGridLayout.getChildAt(i).setAlpha(100);
 			}
-			cur_count++;
+			currentCount++;
 
 		}
 		return true;
