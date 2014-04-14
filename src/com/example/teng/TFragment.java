@@ -1,6 +1,6 @@
 package com.example.teng;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.ClipData;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -25,7 +25,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class TFragment extends Fragment {
-
+	enum shape {
+		SmallSquare, BigSquare, Rectangle
+	}
 	int currentId = 0;
 	int changeId = 0;
 	View currentView;
@@ -146,32 +148,44 @@ public class TFragment extends Fragment {
 		}
 	}
 	/////////////////////////////////Click Touch Event Control////////////////////////////
+	private GridLayout.LayoutParams setlayout(shape s) {
+		GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+		if (s == shape.BigSquare) {
+			params.width = metrics.widthPixels / 2;
+			params.height = metrics.heightPixels / 3;
+			params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
+			params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
+			
+		} else if (s == shape.Rectangle) {
+			params.width = metrics.widthPixels / 2;
+			params.height = metrics.heightPixels / 6;
+			params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
+			params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
+		} else {
+			params.width = metrics.widthPixels / 4;
+			params.height = metrics.heightPixels / 6;
+			params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
+			params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
+		}
+		return params;
+	}
+
 	OnClickListener listener = new OnClickListener() {
 
 		@Override
 		public void onClick(View v) {
+			Integer a = (Integer) currentView.getTag();
 			if (currentView.getHeight() == metrics.heightPixels / 3
 					&& currentView.getWidth() == metrics.widthPixels / 2) {
-				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-				params.width = metrics.widthPixels / columnCount;
-				params.height = metrics.heightPixels / rowCount;
-				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, smallSize);
-				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE,
-						smallSize);
-				Integer a = (Integer) currentView.getTag();
-				mGridLayout.getChildAt(a).setLayoutParams(params);
+				mGridLayout.getChildAt(a).setLayoutParams(
+						setlayout(shape.SmallSquare));
+			} else if (currentView.getHeight() == metrics.heightPixels / 6
+					&& currentView.getWidth() == metrics.widthPixels / 2) {
+				mGridLayout.getChildAt(a).setLayoutParams(
+						setlayout(shape.BigSquare));
 			} else {
-				Log.i("Ten", "v.getHeight():" + v.getHeight()
-						+ "===metrics.widthPixels / 2:" + metrics.heightPixels
-						/ 2);
-				GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-
-				params.width = metrics.widthPixels / (columnCount / 2);
-				params.height = metrics.heightPixels / (rowCount / 2);
-				params.rowSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
-				params.columnSpec = GridLayout.spec(Integer.MIN_VALUE, bigSize);
-				Integer a = (Integer) currentView.getTag();
-				mGridLayout.getChildAt(a).setLayoutParams(params);
+				mGridLayout.getChildAt(a).setLayoutParams(
+						setlayout(shape.Rectangle));
 			}
 
 		}
@@ -202,7 +216,7 @@ public class TFragment extends Fragment {
 	}
 
 
-	Handler handler = new Handler();
+	Handler _handler = new Handler();
 	Runnable mLongPressRunnable = new Runnable() {
 		@Override
 		public void run() {
@@ -217,8 +231,9 @@ public class TFragment extends Fragment {
 					@Override
 					public void onClick(View v) {
 						currentView.setAlpha(0);
-						Toast.makeText(getActivity(), ((TextView)v.findViewById(R.id.textView1)).getText(),
-								Toast.LENGTH_SHORT).show();
+						for(int i = currentId ; i < viewMax -1 ;i++ )
+							SwapView(i, i+1);
+
 					}
 				});
 				isDraged = true;
@@ -258,7 +273,7 @@ public class TFragment extends Fragment {
 					isMoved = false;
 					currentId = (Integer) view.getTag();
 					currentView = view;
-					handler.postDelayed(mLongPressRunnable,
+					_handler.postDelayed(mLongPressRunnable,
 							ViewConfiguration.getLongPressTimeout());
 				}
 				isDraged = false;
@@ -270,10 +285,12 @@ public class TFragment extends Fragment {
 						|| Math.abs(mLastMotionY - y) > TOUCH_SLOP) {
 					// if touch move over slop threshold ,isMoved mark true;
 					isMoved = true;
+					_handler.removeCallbacks(mLongPressRunnable);
 				}
 				return true;
 			} else {
 				isMoved = true;
+				_handler.removeCallbacks(mLongPressRunnable);
 			}
 			return true;
 		}

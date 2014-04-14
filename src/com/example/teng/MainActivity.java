@@ -2,11 +2,11 @@ package com.example.teng;
 
 import android.os.Bundle;
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.support.v4.app.FragmentActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
 	private int currentCount =0;
 
 	@SuppressLint("NewApi")
