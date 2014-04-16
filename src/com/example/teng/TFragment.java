@@ -1,5 +1,8 @@
 package com.example.teng;
 
+import java.util.HashMap;
+
+
 import android.support.v4.app.Fragment;
 import android.content.ClipData;
 import android.graphics.Color;
@@ -20,81 +23,76 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.GridLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class TFragment extends Fragment {
 	enum shape {
 		SmallSquare, BigSquare, Rectangle
 	}
+
 	int currentId = 0;
 	int changeId = 0;
 	View currentView;
-	
+
 	private int smallSize = 1;
 	private int bigSize = 2;
 	private int columnCount = 4;
 	private int rowCount = 6;
-	
 	int viewMax = ShareData.data().viewMax = 24;
 	
+	HashMap<String,View> hashViews = new HashMap<String, View>();
 	GridLayout mGridLayout;
-	View[] mViews;
 	DisplayMetrics metrics;
 	
+	
+	public View v;
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
 
 		super.onCreateView(inflater, container, savedInstanceState);
-
+		v = inflater.inflate(R.layout.tfragment, container, false);
 		metrics = new DisplayMetrics();
-		getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		getActivity().getWindowManager().getDefaultDisplay()
+				.getMetrics(metrics);
 		Log.i("Ten", "This deview pixels X:" + metrics.widthPixels + " Y:"
 				+ metrics.heightPixels);
-		mGridLayout = ShareData.data().mGridLayout= new GridLayout(getActivity());
-		mViews = ShareData.data().mViews = new View[viewMax];
+		mGridLayout = ShareData.data().mGridLayout = (GridLayout) v.findViewById(R.id.gridlayoutView1);
 		GridLayoutInit(inflater);
-		ScrollView scrollView = new ScrollView(getActivity());
-		scrollView.addView(mGridLayout);
-		return scrollView;
+		return v;
 	}
 	
 	
 	
 	private void GridLayoutInit(LayoutInflater inflater) {
-		mGridLayout.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
-				LayoutParams.MATCH_PARENT));
 		mGridLayout.setOrientation(0);
 		mGridLayout.setColumnCount(columnCount);
 		mGridLayout.setRowCount(rowCount);
-
-		for (int i = 0; i < viewMax; i++) {
+		LayoutParams itemlayoutParams = new LayoutParams(metrics.widthPixels
+					/ columnCount, metrics.heightPixels / rowCount);
+		for (int i = 0; i < viewMax; i++) {						
 			View view = inflater.inflate(R.layout.metro_view, null);
-			mViews[i] = view;// new View(MainActivity.this);
-			mViews[i].setLayoutParams(new LayoutParams(metrics.widthPixels
-					/ columnCount, metrics.heightPixels / rowCount));
-			if (i % 5 == 0)
-				mViews[i].setBackgroundColor(Color.BLUE);
-			else if (i % 7 == 0)
-				mViews[i].setBackgroundColor(Color.RED);
-			else if (i % 3 == 0)
-				mViews[i].setBackgroundColor(Color.GRAY);
-			else if (i % 11 == 0 || i % 13 == 0 || i % 19 == 0)
-				mViews[i].setBackgroundColor(Color.BLACK);	
-			else if (i % 3 == 1)
-				mViews[i].setBackgroundColor(Color.CYAN);	
-			else
-				mViews[i].setBackgroundColor(Color.GREEN);		
-			mViews[i].setAlpha(0);
-			
-			mGridLayout.addView(mViews[i]);
-						
+			view.setLayoutParams(itemlayoutParams);
+			view.setAlpha(100);
 			TextView tv = (TextView) view.findViewById(R.id.textView1);
 			tv.setText("" + i);
-			mViews[i].setTag(i);
-			mViews[i].setOnTouchListener(new MyTouchListener());
-			mViews[i].setOnDragListener(new MyDramGridLayoutistener());
+			view.setTag(i);
+			view.setOnTouchListener(new MyTouchListener());
+			view.setOnDragListener(new MyDramGridLayoutistener());
+			if (i % 5 == 0)
+				view.setBackgroundColor(Color.BLUE);
+			else if (i % 7 == 0)
+				view.setBackgroundColor(Color.RED);
+			else if (i % 3 == 0)
+				view.setBackgroundColor(Color.GRAY);
+			else if (i % 11 == 0 || i % 13 == 0 || i % 19 == 0)
+				view.setBackgroundColor(Color.BLACK);	
+			else if (i % 3 == 1)
+				view.setBackgroundColor(Color.CYAN);	
+			else
+				view.setBackgroundColor(Color.GREEN);		
+			view.setAlpha(0);
+			hashViews.put(""+i, view);
+			mGridLayout.addView(hashViews.get(""+i));			
 		}
 	}
 
@@ -192,26 +190,22 @@ public class TFragment extends Fragment {
 	};
 
 	public void SwapView(int a, int b) {
-		Integer tInteger = (Integer) mViews[b].getTag();
-		mViews[b].setTag(mViews[a].getTag());
-		mViews[a].setTag(tInteger);
+		View temp= hashViews.get(""+b);
+		hashViews.put(""+b, hashViews.get(""+a));
+		hashViews.put(""+a, temp);
+		Integer tInteger = (Integer) hashViews.get(""+b).getTag();
+		hashViews.get(""+b).setTag(hashViews.get(""+a).getTag());
+		hashViews.get(""+a).setTag(tInteger);
 		if (a < b) {
-			mGridLayout.removeView(mViews[b]);
-			mGridLayout.removeView(mViews[a]);
-			View temp = mViews[b];
-			mViews[b] = mViews[a];
-			mViews[a] = temp;
-			mGridLayout.addView(mViews[a], a);
-			mGridLayout.addView(mViews[b], b);
+			mGridLayout.removeView(hashViews.get(""+b));
+			mGridLayout.removeView(hashViews.get(""+a));
+			mGridLayout.addView(hashViews.get(""+a), a);
+			mGridLayout.addView(hashViews.get(""+b), b);
 		} else {
-			mGridLayout.removeView(mViews[a]);
-			mGridLayout.removeView(mViews[b]);
-
-			View temp = mViews[b];
-			mViews[b] = mViews[a];
-			mViews[a] = temp;
-			mGridLayout.addView(mViews[b], b);
-			mGridLayout.addView(mViews[a], a);
+			mGridLayout.removeView(hashViews.get(""+a));
+			mGridLayout.removeView(hashViews.get(""+b));
+			mGridLayout.addView(hashViews.get(""+b), b);
+			mGridLayout.addView(hashViews.get(""+a), a);
 		}
 	}
 

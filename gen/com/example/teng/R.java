@@ -26,8 +26,10 @@ public final class R {
     public static final class id {
         public static final int LeftTopbtn=0x7f080003;
         public static final int RightBottombtn=0x7f080004;
-        public static final int action_setting=0x7f080005;
+        public static final int action_setting=0x7f080007;
         public static final int fragment1=0x7f080000;
+        public static final int gridlayoutView1=0x7f080006;
+        public static final int scrollView1=0x7f080005;
         public static final int textView1=0x7f080002;
         public static final int view1=0x7f080001;
     }

@@ -1,6 +1,5 @@
 package com.example.teng;
 
-import android.view.View;
 import android.widget.GridLayout;
 
 public class ShareData {
@@ -12,6 +11,5 @@ public class ShareData {
 		return shareData;
 	}
 	public GridLayout mGridLayout;
-	public View[] mViews;
 	public int viewMax;
 }
