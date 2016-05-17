@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Teng</string>
+    <string name="app_name">MetroUI</string>
     <string name="action_setting">add</string>
     <string name="hello_world">Hello world!</string>
 

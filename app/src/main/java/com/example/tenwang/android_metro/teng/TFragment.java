@@ -41,7 +41,7 @@ public class TFragment extends Fragment {
 	private int rowCount = 6;
 	int viewMax = ShareData.data().viewMax = 24;
 	
-	HashMap<String,View> hashViews = new HashMap<String, View>();
+	HashMap<Integer,View> hashViews = new HashMap<>();
 	GridLayout mGridLayout;
 	DisplayMetrics metrics;
 	
@@ -78,7 +78,7 @@ public class TFragment extends Fragment {
 			tv.setText("" + i);
 			view.setTag(i);
 			view.setOnTouchListener(new MyTouchListener());
-			view.setOnDragListener(new MyDramGridLayoutistener());
+			view.setOnDragListener(new MyDramGridLayoutListener());
 			if (i % 5 == 0)
 				view.setBackgroundColor(Color.BLUE);
 			else if (i % 7 == 0)
@@ -92,12 +92,12 @@ public class TFragment extends Fragment {
 			else
 				view.setBackgroundColor(Color.GREEN);		
 			view.setAlpha(0);
-			hashViews.put(""+i, view);
-			mGridLayout.addView(hashViews.get(""+i));			
+			hashViews.put(i, view);
+			mGridLayout.addView(hashViews.get(i));
 		}
 	}
 
-	private final class MyDramGridLayoutistener implements OnDragListener {
+	private final class MyDramGridLayoutListener implements OnDragListener {
 
 		@Override
 		public boolean onDrag(View v, DragEvent event) {
@@ -120,7 +120,7 @@ public class TFragment extends Fragment {
 						public void run() {
 							Log.i("Ten", "change a:" + changeId
 									+ " change d:" + currentId);
-							SwapView(changeId, currentId);
+							swapView(changeId, currentId);
 
 						}
 					});
@@ -147,7 +147,7 @@ public class TFragment extends Fragment {
 		}
 	}
 	/////////////////////////////////Click Touch Event Control////////////////////////////
-	private GridLayout.LayoutParams setlayout(shape s) {
+	private GridLayout.LayoutParams setLayout(shape s) {
 		GridLayout.LayoutParams params = new GridLayout.LayoutParams();
 		if (s == shape.BigSquare) {
 			params.width = metrics.widthPixels / 2;
@@ -177,36 +177,36 @@ public class TFragment extends Fragment {
 			if (currentView.getHeight() == metrics.heightPixels / 3
 					&& currentView.getWidth() == metrics.widthPixels / 2) {
 				mGridLayout.getChildAt(a).setLayoutParams(
-						setlayout(shape.SmallSquare));
+						setLayout(shape.SmallSquare));
 			} else if (currentView.getHeight() == metrics.heightPixels / 6
 					&& currentView.getWidth() == metrics.widthPixels / 2) {
 				mGridLayout.getChildAt(a).setLayoutParams(
-						setlayout(shape.BigSquare));
+						setLayout(shape.BigSquare));
 			} else {
 				mGridLayout.getChildAt(a).setLayoutParams(
-						setlayout(shape.Rectangle));
+						setLayout(shape.Rectangle));
 			}
 
 		}
 	};
 
-	public void SwapView(int a, int b) {
-		View temp= hashViews.get(""+b);
-		hashViews.put(""+b, hashViews.get(""+a));
-		hashViews.put(""+a, temp);
-		Integer tInteger = (Integer) hashViews.get(""+b).getTag();
-		hashViews.get(""+b).setTag(hashViews.get(""+a).getTag());
-		hashViews.get(""+a).setTag(tInteger);
+	public void swapView(int a, int b) {
+		View temp= hashViews.get(b);
+		hashViews.put(b, hashViews.get(a));
+		hashViews.put(a, temp);
+		Integer tInteger = (Integer) hashViews.get(b).getTag();
+		hashViews.get(b).setTag(hashViews.get(a).getTag());
+		hashViews.get(a).setTag(tInteger);
 		if (a < b) {
-			mGridLayout.removeView(hashViews.get(""+b));
-			mGridLayout.removeView(hashViews.get(""+a));
-			mGridLayout.addView(hashViews.get(""+a), a);
-			mGridLayout.addView(hashViews.get(""+b), b);
+			mGridLayout.removeView(hashViews.get(b));
+			mGridLayout.removeView(hashViews.get(a));
+			mGridLayout.addView(hashViews.get(a), a);
+			mGridLayout.addView(hashViews.get(b), b);
 		} else {
-			mGridLayout.removeView(hashViews.get(""+a));
-			mGridLayout.removeView(hashViews.get(""+b));
-			mGridLayout.addView(hashViews.get(""+b), b);
-			mGridLayout.addView(hashViews.get(""+a), a);
+			mGridLayout.removeView(hashViews.get(a));
+			mGridLayout.removeView(hashViews.get(b));
+			mGridLayout.addView(hashViews.get(b), b);
+			mGridLayout.addView(hashViews.get(a), a);
 		}
 	}
 
@@ -227,7 +227,7 @@ public class TFragment extends Fragment {
 					public void onClick(View v) {
 						currentView.setAlpha(0);
 						for(int i = currentId ; i < viewMax -1 ;i++ )
-							SwapView(i, i+1);
+							swapView(i, i+1);
 
 					}
 				});
